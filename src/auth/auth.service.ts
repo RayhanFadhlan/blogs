@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Users } from 'src/users/users.entity';
+import { User } from 'src/users/entities/user.entity';
 import { DataSource } from 'typeorm';
 import { compare, hash } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -14,8 +14,8 @@ export class AuthService {
   async validateUser(
     username: string,
     password: string
-  ): Promise<Users | null> {
-    const user = await this.dataSource.getRepository(Users).findOne({
+  ): Promise<User | null> {
+    const user = await this.dataSource.getRepository(User).findOne({
       where: { username }
     });
     if(!user){
@@ -33,7 +33,7 @@ export class AuthService {
     username: string,
     password: string
   ) {
-    const user = await this.dataSource.getRepository(Users).findOne({
+    const user = await this.dataSource.getRepository(User).findOne({
       where: { username }
     });
     if(user){
@@ -41,12 +41,12 @@ export class AuthService {
     }
     
     const hashedPassword = await hash(password, 10);
-    const newUser = this.dataSource.getRepository(Users).create({
+    const newUser = this.dataSource.getRepository(User).create({
       name,
       username,
       password: hashedPassword
     });
-    await this.dataSource.getRepository(Users).save(newUser);
+    await this.dataSource.getRepository(User).save(newUser);
     return newUser;
   }
 

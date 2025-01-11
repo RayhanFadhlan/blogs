@@ -1,26 +1,147 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
+import { Blog } from './entities/blog.entity';
+import { Tag } from './entities/tag.entity';
+import { User } from '../users/entities/user.entity';
+
+import { FileUploadService } from 'src/storage/storage.service';
 
 @Injectable()
 export class BlogsService {
-  create(createBlogDto: CreateBlogDto) {
-    return 'This action adds a new blog';
+  constructor(
+    @InjectRepository(Blog)
+    private blogRepository: Repository<Blog>,
+    @InjectRepository(Tag)
+    private tagRepository: Repository<Tag>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    private fileUploadService: FileUploadService,
+  ) {}
+
+  async create(createBlogDto: CreateBlogDto, userId: number): Promise<Blog> {
+    let thumbnailPath: string;
+    try {
+      const user = await this.userRepository.findOneBy({ id: userId });
+      if (!user) throw new NotFoundException('User not found');
+
+      thumbnailPath = await this.fileUploadService.uploadFile(
+        createBlogDto.thumbnail,
+      );
+
+      const blog = this.blogRepository.create({
+        title: createBlogDto.title,
+        content: createBlogDto.content,
+        thumbnail: thumbnailPath,
+        user: user,
+      });
+
+      // Save blog first to get ID
+      const savedBlog = await this.blogRepository.save(blog);
+
+      // Handle tags if they exist
+      if (createBlogDto.tags && createBlogDto.tags.length > 0) {
+        const tags = await Promise.all(
+          createBlogDto.tags.map(async (tagName) => {
+            let tag = await this.tagRepository.findOneBy({ name: tagName });
+            if (!tag) {
+              tag = this.tagRepository.create({ name: tagName });
+              await this.tagRepository.save(tag);
+            }
+            return tag;
+          }),
+        );
+
+        savedBlog.tags = tags;
+        await this.blogRepository.save(savedBlog);
+      }
+
+      return this.blogRepository.findOne({
+        where: { id: savedBlog.id },
+        relations: ['tags'],
+      });
+    } catch (error : unknown) {
+      if(thumbnailPath){
+        await this.fileUploadService.deleteFile(thumbnailPath);
+      }
+      throw error;
+      
+    }
   }
 
-  findAll() {
-    return `This action returns all blogs`;
+  async findAll(page = 1, limit = 10) {
+    const [blogs, total] = await this.blogRepository.findAndCount({
+      relations: ['user', 'tags'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      data: blogs,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} blog`;
+  async findOne(id: number): Promise<Blog> {
+    const blog = await this.blogRepository.findOne({
+      where: { id },
+      relations: ['user', 'tags'],
+    });
+    if (!blog) throw new NotFoundException('Blog not found');
+    return blog;
   }
 
-  update(id: number, updateBlogDto: UpdateBlogDto) {
-    return `This action updates a #${id} blog`;
+  async update(id: number, updateBlogDto: UpdateBlogDto): Promise<Blog> {
+    const blog = await this.findOne(id);
+
+    if (updateBlogDto.tags) {
+      const tags = await Promise.all(
+        updateBlogDto.tags.map(async (tagName) => {
+          let tag = await this.tagRepository.findOneBy({ name: tagName });
+          if (!tag) {
+            tag = this.tagRepository.create({ name: tagName });
+            await this.tagRepository.save(tag);
+          }
+          return tag;
+        }),
+      );
+      blog.tags = tags;
+    }
+
+    Object.assign(blog, updateBlogDto);
+    return this.blogRepository.save(blog);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} blog`;
+  async remove(id: number): Promise<void> {
+    const blog = await this.findOne(id);
+    await this.blogRepository.remove(blog);
+  }
+
+  async findByUser(userId: number, page = 1, limit = 10) {
+    const [blogs, total] = await this.blogRepository.findAndCount({
+      where: { user: { id: userId } },
+      relations: ['tags'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      data: blogs,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }
