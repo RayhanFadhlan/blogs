@@ -42,9 +42,10 @@ export class BlogsService {
       const savedBlog = await this.blogRepository.save(blog);
 
       // Handle tags if they exist
-      if (createBlogDto.tags && createBlogDto.tags.length > 0) {
+      if (createBlogDto.tags) {
+        const tagNames = createBlogDto.tags.split(',').map((tag) => tag.trim());
         const tags = await Promise.all(
-          createBlogDto.tags.map(async (tagName) => {
+          tagNames.map(async (tagName) => {
             let tag = await this.tagRepository.findOneBy({ name: tagName });
             if (!tag) {
               tag = this.tagRepository.create({ name: tagName });
@@ -80,7 +81,7 @@ export class BlogsService {
     });
 
     return {
-      data: blogs,
+      blogs: blogs,
       meta: {
         total,
         page,
@@ -103,8 +104,9 @@ export class BlogsService {
     const blog = await this.findOne(id);
 
     if (updateBlogDto.tags) {
+      const tagNames = updateBlogDto.tags.split(',').map((tag) => tag.trim());
       const tags = await Promise.all(
-        updateBlogDto.tags.map(async (tagName) => {
+        tagNames.map(async (tagName) => {
           let tag = await this.tagRepository.findOneBy({ name: tagName });
           if (!tag) {
             tag = this.tagRepository.create({ name: tagName });
@@ -115,13 +117,29 @@ export class BlogsService {
       );
       blog.tags = tags;
     }
+    if (updateBlogDto.thumbnail) {
+      const thumbnailPath = await this.fileUploadService.uploadFile(
+        updateBlogDto.thumbnail,
+      );
+      await this.fileUploadService.deleteFile(blog.thumbnail);
+      blog.thumbnail = thumbnailPath;
+      console.log(thumbnailPath);
+    }
+    blog.title = updateBlogDto.title;
+    blog.content = updateBlogDto.content;
 
-    Object.assign(blog, updateBlogDto);
-    return this.blogRepository.save(blog);
+    await this.blogRepository.save(blog);
+
+    return this.blogRepository.findOne({
+      where: { id },
+      relations: ['tags'],
+    });
+
   }
 
   async remove(id: number): Promise<void> {
     const blog = await this.findOne(id);
+    await this.fileUploadService.deleteFile(blog.thumbnail);
     await this.blogRepository.remove(blog);
   }
 
@@ -135,7 +153,7 @@ export class BlogsService {
     });
 
     return {
-      data: blogs,
+      blogs: blogs,
       meta: {
         total,
         page,

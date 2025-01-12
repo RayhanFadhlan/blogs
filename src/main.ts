@@ -12,18 +12,20 @@ async function bootstrap() {
     whitelist: true,
     transform: true,
   }));
-
+  
   // interceptors to format response
-  app.useGlobalInterceptors(new ResponseInterceptor( new Reflector()));
-
+  app.useGlobalInterceptors(new ResponseInterceptor(new Reflector()));
 
   // class serializer interceptor
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('BLP API')
+    .setTitle('Blogs API')
     .setVersion('1.0')
+    .addBearerAuth()
+    .addSecurityRequirements('bearer')
+    .setDescription('Api Documentation for Blogs')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

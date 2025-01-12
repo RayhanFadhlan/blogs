@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { JwtPayload } from '../interface/jwt.interface';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -20,7 +21,7 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     try {
-      const payload = await this.jwtService.verifyAsync(
+      const payload : JwtPayload = await this.jwtService.verifyAsync(
         token,
         {
           secret: this.configService.get<string>('JWT_SECRET'),
@@ -28,7 +29,7 @@ export class JwtAuthGuard implements CanActivate {
       );
       request['user'] = payload;
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Invalid token');
     }
     return true;
   }

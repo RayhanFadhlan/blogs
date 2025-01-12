@@ -1,6 +1,7 @@
 import { User } from 'src/users/entities/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { Tag } from './tag.entity';
+import { Comment } from 'src/comments/entities/comment.entity';
 
 @Entity('blogs')
 export class Blog {
@@ -38,5 +39,8 @@ export class Blog {
         }
     })
     tags: Tag[];
+
+    @OneToMany(() => Comment, comment => comment.blog)
+    comments: Comment[];
 
 }

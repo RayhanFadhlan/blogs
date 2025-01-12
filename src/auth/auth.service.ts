@@ -3,6 +3,7 @@ import { User } from 'src/users/entities/user.entity';
 import { DataSource } from 'typeorm';
 import { compare, hash } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { JwtPayload } from './interface/jwt.interface';
 
 @Injectable()
 export class AuthService {
@@ -51,7 +52,7 @@ export class AuthService {
   }
 
   async login(
-    username:string,
+    username: string,
     password: string
   )  {
     console.log(username, password);
@@ -59,7 +60,7 @@ export class AuthService {
     if(!user){
       throw new BadRequestException('Invalid username or password');
     }
-    const jwtPayload = {
+    const jwtPayload : JwtPayload = {
       id: user.id,
       username: user.username,
       name: user.name

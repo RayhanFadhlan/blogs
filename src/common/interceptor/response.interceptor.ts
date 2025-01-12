@@ -1,6 +1,6 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, HttpException, HttpStatus } from '@nestjs/common';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { RESPONSE_MESSAGE_METADATA } from '../decorator/response-message.decorator';
 import { Reflector } from '@nestjs/core';
 
@@ -20,7 +20,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T,Response<T>> {
   intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
     return next.handle().pipe(
       map((res: unknown) => this.responseHandler(res, context)),
-      catchError((err: HttpException) => throwError(() => this.errorHandler(err, context)))
+      // catchError((err: HttpException) => throwError(() => this.errorHandler(err, context)))
     );
   }
 

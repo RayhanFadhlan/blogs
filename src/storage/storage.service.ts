@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { promises as fs } from 'fs';
 import * as path from 'path';
@@ -29,23 +29,22 @@ export class FileUploadService {
       throw new Error(`Failed to upload file: ${error.message}`);
     }
   }
+
   async deleteFile(filePath: string): Promise<void> {
     try {
       const absolutePath = path.join(process.cwd(), filePath);
-      
+
       // Check if file exists
       try {
         await fs.access(absolutePath);
       } catch {
-        throw new NotFoundException(`File ${filePath} not found`);
+        
+        return;
       }
 
       // Delete file
       await fs.unlink(absolutePath);
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
       throw new Error(`Failed to delete file: ${error.message}`);
     }
   }

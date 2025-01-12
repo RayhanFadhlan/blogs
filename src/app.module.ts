@@ -9,6 +9,7 @@ import { BlogsModule } from './blogs/blogs.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
+import { CommentsModule } from './comments/comments.module';
 
 
 @Module({
@@ -31,6 +32,7 @@ import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
     UsersModule,
     AuthModule,
     BlogsModule,
+    CommentsModule,
   ],
 })
 export class AppModule {}
