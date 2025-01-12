@@ -2,7 +2,7 @@
 
 ## Overview
 A RESTful API for a blogging platform built with NestJS, TypeORM, and PostgreSQL.
-Front is build with NextJS
+Front end is built with NextJS
 
 ## Tech Stack
 - NestJS
@@ -45,3 +45,11 @@ npm run start:dev
 
 # On blp-fe
 npm run dev
+```
+## API Docs
+To open swagger API docs, go to 
+```
+http://localhost:3000/api
+```
+## ERD
+![ERD](./assets/erd.svg)
