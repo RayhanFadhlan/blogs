@@ -11,20 +11,24 @@ export class FileUploadService {
 
   async uploadFile(file: MemoryStoredFile): Promise<string> {
     try {
-      // Create uploads directory if it doesn't exist
       const uploadDir = path.join(process.cwd(), 'uploads');
       await fs.mkdir(uploadDir, { recursive: true });
 
-      // Generate unique filename
+      // Process filename
       const fileExtension = file.originalName.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExtension}`;
+      const baseFileName = file.originalName
+        .replace(`.${fileExtension}`, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+      const fileName = `${baseFileName}-${uuidv4().slice(0, 8)}.${fileExtension}`;
       const filePath = path.join(uploadDir, fileName);
 
       // Write file to disk
       await fs.writeFile(filePath, file.buffer);
 
-      // Return the relative path to be stored in database
-      return `uploads/${fileName}`;
+      // Return full URL path
+      const backendUrl = this.configService.get('BACKEND_URL') || 'http://localhost:3000';
+      return `${backendUrl}/uploads/${fileName}`;
     } catch (error) {
       throw new Error(`Failed to upload file: ${error.message}`);
     }

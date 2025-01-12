@@ -40,7 +40,7 @@ export class Blog {
     })
     tags: Tag[];
 
-    @OneToMany(() => Comment, comment => comment.blog)
+    @OneToMany(() => Comment, comment => comment.blog, { cascade: true, onDelete: "CASCADE" })
     comments: Comment[];
 
 }

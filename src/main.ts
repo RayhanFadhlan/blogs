@@ -19,6 +19,8 @@ async function bootstrap() {
   // class serializer interceptor
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
+  app.enableCors();
+
   // Swagger
   const config = new DocumentBuilder()
     .setTitle('Blogs API')
