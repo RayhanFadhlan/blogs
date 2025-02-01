@@ -15,7 +15,12 @@ const nextConfig: NextConfig = {
         hostname: "backend",
         port: "3000",
         pathname: "/uploads/**",
-      }
+      },
+      {
+        protocol: "http",
+        hostname: "api.blogs.rayhanfa.me",
+        pathname: "/uploads/**",
+      }, 
     ],
   },
 };
