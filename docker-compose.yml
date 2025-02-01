@@ -35,9 +35,13 @@ services:
     build:
       context: ./blp-fe
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} 
     env_file:
       - .env
-    #   # Add other environment variables as needed
+
     ports:
       - "8000"
     depends_on:
