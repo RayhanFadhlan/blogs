@@ -10,7 +10,7 @@ RUN npm install
 
 # Copy source code
 COPY . .
-
+ARG NEXT_PUBLIC_API_URL
 RUN echo "public url: $NEXT_PUBLIC_API_URL"
 # Build the application
 RUN npm run build
